@@ -1,9 +1,10 @@
 "use strict";
 
 // This is the global list of the stories, an instance of StoryList
-let storyList, showDeleteBtn;
+let storyList, showDeleteBtn, idToRemove;
 
 /** Get and show stories when site first loads. */
+
 async function getAndShowStoriesOnStart() {
   storyList = await StoryList.getStories();
   $storiesLoadingMsg.remove();
@@ -17,11 +18,12 @@ async function getAndShowStoriesOnStart() {
  *
  * Returns the markup for the story.
  */
+
 function generateStoryMarkup(story, showDeleteBtn = false) {
   // console.debug("generateStoryMarkup", story);
   const hostName = story.getHostName();
 const showStar = Boolean(currentUser);
-
+//const showDeleteBtn = Boolean(currentUser);
   return $(`
       <li id="${story.storyId}">
       ${showDeleteBtn ? getDeleteBtnHTML() : ""}
@@ -37,7 +39,7 @@ const showStar = Boolean(currentUser);
       </li>
     `);
 }
-
+// line 32: <small class="story-hostname">(${hostName})</small>
 /** Make favorite stars **/
 function getStarHTML(story, user){
   const isFavorite = user.isFavorite(story);
@@ -64,7 +66,9 @@ function getEditBtnHTML(){
     </span>`;
 }
 
+
 /** Gets list of stories from server, generates their HTML, and puts on page. */
+
 function putStoriesOnPage() {
   console.debug("putStoriesOnPage");
 
@@ -104,7 +108,7 @@ $addStoryForm.on("submit", submitNewStory);
 * Functionality for list of user's own stories*/
 function putUserStoriesOnPage() {
   console.debug("putUserStoriesOnPage");
-                                            
+                                                //  console.log(currentUser.myStories);
   $myStories.empty();
     if(currentUser.myStories.length === 0){
       $myStories.append("<h5>No stories added by user!</h5>");
@@ -134,16 +138,35 @@ async function editStory(evt){
   console.debug("editStory", evt);
   hidePageComponents();
   const $closestLi = $(evt.target).closest("li");
-  const storyId = $closestLi.attr("id");                 
-  const editedStory = await storyList.retrieveMyStory(currentUser, storyId);
-  $addStoryForm.show();
-  $("#author").val(editedStory.author);
-  $("#title").val(editedStory.title);
-  $("#url").val(editedStory.url)
-  
-  deleteStory(evt);
+  const storyId = $closestLi.attr("id");                  
+  idToRemove = storyId;
+
+  let editedStory = await storyList.retrieveMyStory(currentUser, storyId);
+  $updateStoryForm.show();
+  $("#author-update").val(editedStory.author);
+  $("#title-update").val(editedStory.title);
+  $("#url-update").val(editedStory.url)
 }
-$myStories.on('click', ".edit-story",editStory);
+  $myStories.on('click', ".edit-story",editStory);
+
+async function updateMyStory(evt){
+  console.debug("updateMyStory");
+  evt.preventDefault();                    
+  const author = $("#author-update").val();            
+  const title = $("#title-update").val();
+  const url = $("#url-update").val();
+  const username = currentUser.username;
+  const story = await storyList.addStory( currentUser, {title, url, author, username} ); //, username
+  const $story = generateStoryMarkup(story);
+  $allStoriesList.prepend($story);
+  $myStories.append($story);
+   $favoriteStories.hide();
+   $myStories.hide();
+  $updateStoryForm.slideUp("slow");
+  $updateStoryForm.trigger("reset");
+    await storyList.removeStory(currentUser,idToRemove);
+}
+$updateStoryForm.on("submit", updateMyStory);
 
 
 /******************************************************************************

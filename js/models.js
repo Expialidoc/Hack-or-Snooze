@@ -5,7 +5,9 @@ const BASE_URL = "https://hack-or-snooze-v3.herokuapp.com";
 /******************************************************************************
  * Story: a single story in the system
  */
+
 class Story {
+
   /** Make instance of Story from data object about story:
    *   - {title, author, url, username, storyId, createdAt}
    */
@@ -19,15 +21,18 @@ class Story {
   }
 
   /** Parses hostname out of URL and returns it. */
+
   getHostName() {
     let loc = new URL(this.url);
     return loc.host; //"hostname.com";
   }
 }
 
+
 /******************************************************************************
  * List of Story instances: used by UI to show story lists in DOM.
  */
+
 class StoryList {
   constructor(stories) {
     this.stories = stories;
@@ -72,7 +77,7 @@ class StoryList {
       method: "POST",
       data: { token, story: { title, author, url } },
     });                                                 
-    
+    //console.log(response.data);
     const story = new Story(response.data.story);
     this.stories.unshift(story);
     user.myStories.unshift(story); 
@@ -100,8 +105,6 @@ user.myStories = user.myStories.filter(s => s.storyId !== storyId);
 user.favorites = user.favorites.filter(s => s.storyId !== storyId);
   }
 
-  /** Get the story from API using ID:
-*/
   async retrieveMyStory(user, storyId) {
     const token = user.loginToken;
     const response =await axios({
@@ -172,10 +175,10 @@ class User {
   }
 
   /** Login in user with API, make User instance & return it.
-
    * - username: an existing user's username
    * - password: an existing user's password
    */
+
   static async login(username, password) {
     const response = await axios({
       url: `${BASE_URL}/login`,
